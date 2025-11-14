@@ -1,0 +1,54 @@
+import streamlit as st
+import pandas as pd
+import joblib
+from tensorflow.keras.models import load_model
+
+# =======================
+# LOAD MODEL AND PREPROCESSOR
+# =======================
+model = load_model('car_price_ann_model.h5')
+preprocessor = joblib.load('car_preprocessor.pkl')
+
+st.title("Car Price Prediction using ANN")
+st.markdown("This app predicts the **estimated resale price** of a car using a trained Artificial Neural Network model.")
+
+# =======================
+# USER INPUT
+# =======================
+st.sidebar.header("Input Car Details")
+
+name = st.sidebar.selectbox("Car Model", ['Maruti Swift', 'Hyundai i10', 'Honda City', 'Toyota Innova'])
+company = st.sidebar.selectbox("Company", ['Maruti', 'Hyundai', 'Honda', 'Toyota', 'Ford'])
+year = st.sidebar.number_input("Year of Manufacture", min_value=1990, max_value=2025, value=2015)
+kms_driven = st.sidebar.number_input("Kilometers Driven", min_value=0, max_value=500000, value=35000)
+fuel_type = st.sidebar.selectbox("Fuel Type", ['Petrol', 'Diesel', 'CNG', 'LPG', 'Electric'])
+
+# =======================
+# PREDICT BUTTON
+# =======================
+if st.button("Predict Car Price"):
+    # Create DataFrame
+    sample = pd.DataFrame({
+        'name': [name],
+        'company': [company],
+        'year': [year],
+        'kms_driven': [kms_driven],
+        'fuel_type': [fuel_type]
+    })
+
+    # Preprocess the input
+    sample_transformed = preprocessor.transform(sample)
+
+    # Predict using the ANN model
+    predicted_price = model.predict(sample_transformed)
+
+    st.success(f"**Estimated Price:** ₹{predicted_price[0][0]:,.2f}")
+
+# =======================
+# OPTIONAL: DOWNLOAD MODEL & PREPROCESSOR
+# =======================
+# with open('car_price_ann_model.h5', 'rb') as model_file:
+#     st.download_button("⬇️ Download ANN Model (.h5)", model_file, file_name='car_price_ann_model.h5')
+
+# with open('car_preprocessor.pkl', 'rb') as pre_file:
+#     st.download_button("⬇️ Download Preprocessor (.pkl)", pre_file, file_name='car_preprocessor.pkl')
